@@ -1,0 +1,1054 @@
+package inhatc;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
+
+
+
+public class MultiGameWindow2 extends JFrame{
+	
+	public static final int sizeW = 365;
+	public static final int sizeH = 538;
+	CenPan cenPan ;
+
+	public MultiGameWindow2() {
+		
+	}
+	public MultiGameWindow2(String userID, int musicID) {
+		super("Czerny");
+		setSize(sizeW, sizeH);
+		setLocationRelativeTo(null);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		cenPan = new CenPan(userID, musicID,this);
+		
+
+		add(cenPan,BorderLayout.CENTER);
+		
+		setVisible(true);
+	}
+class CenPan extends JPanel implements KeyListener, ActionListener{
+	//x좌표 설정
+	final int oneX = 12;
+	final int twoX = 62;
+	final int threeX = 112;
+	final int lineY = 420;
+	
+	//노트 크기 설정
+	final int barW = 50;
+	final int barH = 10;
+
+	//노트 이미지
+	ImageIcon shortA = new ImageIcon("Image//ShortNoteA.png");
+	ImageIcon scoreLine = new ImageIcon("Image//ScoreLine.png");
+	ImageIcon longBar = new ImageIcon("Image//LongBar.png");
+	ImageIcon gameBack = new ImageIcon("Image//GameBack.png");
+	ImageIcon gameTitleImage;
+	
+	//키패드 버튼 이미지
+	ImageIcon pauseButtonImage = new ImageIcon("image/pause.png");
+	ImageIcon nomalAButtonImage = new ImageIcon("image/nomalAButton.png");
+	ImageIcon pushAButtonImage = new ImageIcon("image/pushAButton.png");
+	ImageIcon nomalBButtonImage = new ImageIcon("image/nomalBButton.png");
+	ImageIcon pushBButtonImage = new ImageIcon("image/pushBButton.png");
+	ImageIcon nomalCButtonImage = new ImageIcon("image/nomalCButton.png");
+	ImageIcon pushCButtonImage = new ImageIcon("image/pushCButton.png");
+	
+	//이펙트 이미지
+	ImageIcon pushLightImage = new ImageIcon("image/pushLight.png");
+	ImageIcon missImage = new ImageIcon("image/miss.png");
+	ImageIcon badImage = new ImageIcon("image/bad.png"); 
+	ImageIcon goodImage = new ImageIcon("image/good.png"); 
+	ImageIcon greatImage = new ImageIcon("image/great.png"); 
+	ImageIcon perfectImage = new ImageIcon("image/perfect.png");
+	ImageIcon healthImage = new ImageIcon("image/healthBar.png");
+	
+	//콤보 숫자 폰트 이미지
+	ImageIcon comboImage = new ImageIcon("image/combo.png");
+	ImageIcon oneComboImage = new ImageIcon("image/oneCombo.png");
+	ImageIcon twoComboImage = new ImageIcon("image/twoCombo.png");
+	ImageIcon threeComboImage = new ImageIcon("image/threeCombo.png");
+	ImageIcon fourComboImage = new ImageIcon("image/fourCombo.png");
+	ImageIcon fiveComboImage = new ImageIcon("image/fiveCombo.png");
+	ImageIcon sixComboImage = new ImageIcon("image/sixCombo.png");
+	ImageIcon sevenComboImage = new ImageIcon("image/sevenCombo.png");
+	ImageIcon eightComboImage = new ImageIcon("image/eightCombo.png");
+	ImageIcon nineComboImage = new ImageIcon("image/nineCombo.png");
+	ImageIcon zeroComboImage = new ImageIcon("image/zeroCombo.png");
+	
+	
+	//스코어 숫자 폰트 이미지
+	ImageIcon oneScoreImage = new ImageIcon("image/oneScore.png");
+	ImageIcon twoScoreImage = new ImageIcon("image/twoScore.png");
+	ImageIcon threeScoreImage = new ImageIcon("image/threeScore.png");
+	ImageIcon fourScoreImage = new ImageIcon("image/fourScore.png");
+	ImageIcon fiveScoreImage = new ImageIcon("image/fiveScore.png");
+	ImageIcon sixScoreImage = new ImageIcon("image/sixScore.png");
+	ImageIcon sevenScoreImage = new ImageIcon("image/sevenScore.png");
+	ImageIcon eightScoreImage = new ImageIcon("image/eightScore.png");
+	ImageIcon nineScoreImage = new ImageIcon("image/nineScore.png");
+	ImageIcon zeroScoreImage = new ImageIcon("image/zeroScore.png");
+	
+	//일시정지 화면 이미지
+	ImageIcon pauseWindowImage = new ImageIcon("image/pauseWindow.png");
+	ImageIcon pauseResumeImage = new ImageIcon("image/pauseResume.png");
+	ImageIcon pauseExitImage = new ImageIcon("image/pauseExit.png");
+	
+	
+	//콤보 관련 변수
+	JLabel comboLabel = new JLabel(comboImage);
+	JLabel[] comboNumLabel = new JLabel[3];
+	int combo = 0, maxCombo = 0;
+	
+	//스코어 변수
+	JLabel[] scoreLabel = new JLabel[6];
+	
+	//라인 및 체력 라벨
+	JLabel line = new JLabel(scoreLine);
+	JLabel[] noteOneLabel, noteTwoLabel, noteThreeLabel;
+	JLabel healthLabel = new JLabel(healthImage);
+	
+	
+	//유저 정보
+	String userID;
+	Music music = null;
+	int musicID = 0;
+	
+	//점수 설정
+	int score = 0;
+	final int perfect = 32;
+	final int great = 16;
+	final int good = 8;
+	final int bad = 0;
+	int health = 390;
+	final int badHealth = 0;
+	final int failHealth = 0;
+	
+	//버튼 설정
+	JButton pauseButton;
+	int pauseCheck = 0; //일시정지 횟수 체크
+	JLabel OneButton, TwoButton, ThreeButton;
+	JLabel[] pushLight = new JLabel[3];
+	JLabel scoreEffect = new JLabel();
+
+	//점수 라인 설정
+	final int perfectLine = 10;
+	final int greatLine = 20;
+	final int goodLine = 30;
+	final int badLine = 40;
+	
+	//스레드 설정
+	DropBeat db = new DropBeat();
+	
+	//임시변수
+	int[][] tempOneLabel, tempTwoLabel, tempThreeLabel;
+	int timeCount = 0; 
+	JLabel nowOneBar, nowTwoBar, nowThreeBar;
+	JLabel[] tempLongBar = new JLabel[3]; 
+	boolean oneMode = false, twoMode = false, threeMode = false; 
+	int barOneCount = 0, barTwoCount = 0, barThreeCount = 0; 
+	boolean longOneCheck = false, longTwoCheck = false, longThreeCheck = false; 
+	int longOneCount = 0, longTwoCount = 0, longThreeCount = 0; 
+	int addOneCount = 0, addTwoCount = 0, addThreeCount = 0;
+	MultiGameWindow2 gw;
+	
+	//시간 관련 변수
+	double targetTime;
+	double startTime;
+	double currentTime;
+	double tempTiem;
+	double delayTime = 0.0;
+	
+	//데이터베이스 관련 변수
+	Connection conn = null;
+	Statement stmt = null;
+	PreparedStatement pstmt = null;
+	
+	//일시정지 화면 관련 변수
+	JPanel pausePanel = new JPanel();
+	JLabel pauseWindow = new JLabel(pauseWindowImage);
+	JButton pauseResume = new JButton(pauseResumeImage);
+	JButton pauseExit = new JButton(pauseExitImage);
+	
+	//멀티모드 서버 관련 변수
+	ServerSocket server;
+	Socket socket;
+	PrintWriter out;
+	BufferedReader in;
+
+	public CenPan() {
+		
+	}
+	public CenPan(String userID, int musicID, MultiGameWindow2 gw) {
+		//패널 기본 설정
+		setLayout(null);
+		setPreferredSize(new Dimension(MultiGameWindow2.sizeW,MultiGameWindow2.sizeH));
+		this.musicID = musicID;
+		this.userID = userID;
+		this.gw = gw;
+		
+		
+		setBackground();
+		setButton();
+		setLight();
+		setScore();
+		setCombo();
+		setPause();
+		
+		//스레드 실행
+		
+
+		//키 이벤트 등록
+		this.addKeyListener(this);
+		
+		
+		
+		//체력 바 설정
+		healthLabel.setSize(15,387);
+		healthLabel.setLocation(170,100);
+		add(healthLabel,2);
+		//패널 활성화
+		setFocusable(true);
+		setVisible(true);
+		
+		db.start();
+		
+	}
+	
+	private void setPause() {
+		pausePanel.setLocation(50,100);
+		pausePanel.setSize(241,168);
+		pausePanel.setLayout(null);
+		
+		pauseWindow.setSize(241,168);
+		pauseWindow.setLocation(0,0);
+		pausePanel.add(pauseWindow,-1);
+		
+		pauseResume.setSize(72,81);
+		pauseResume.setLocation(20,60);
+		pauseResume.setBorderPainted(false);
+		pauseResume.setFocusPainted(false);
+		pauseResume.setContentAreaFilled(false);
+		pauseResume.addActionListener(this);
+		pausePanel.add(pauseResume,0);
+		
+		pauseExit.setSize(72,81);
+		pauseExit.setLocation(140,60);
+		pauseExit.setBorderPainted(false);
+		pauseExit.setFocusPainted(false);
+		pauseExit.setContentAreaFilled(false);
+		pauseExit.addActionListener(this);
+		pausePanel.add(pauseExit,0);
+		
+	}
+	//배경 설정
+	private void setBackground() {
+		JLabel back = new JLabel(gameBack);
+		back.setLocation(0, 0);
+		back.setSize(350,500);
+		add(back,-1);
+		
+		JLabel title = new JLabel(gameTitleImage);
+		title.setLocation(170, 50);
+		title.setSize(181,75);
+		add(title,0);
+	}
+	
+	//버튼 설정
+	private void setButton() {
+		//일시정지 버튼
+		pauseButton = new JButton(pauseButtonImage);
+		pauseButton.setLocation(320, 10);
+		pauseButton.setBorderPainted(false);
+		pauseButton.setSize(20, 20);
+		pauseButton.addActionListener(this);
+		add(pauseButton,0);
+		
+		//키 패드 버튼
+		OneButton = new JLabel(nomalAButtonImage);
+		OneButton.setLocation(16,475);
+		OneButton.setSize(41, 22);
+		add(OneButton,0);
+		
+		TwoButton = new JLabel(nomalBButtonImage);
+		TwoButton.setLocation(66,475);
+		TwoButton.setSize(41, 22);
+		add(TwoButton,0);
+		
+		ThreeButton = new JLabel(nomalCButtonImage);
+		ThreeButton.setLocation(116,475);
+		ThreeButton.setSize(41, 22);
+		add(ThreeButton,0);
+	}
+	
+	//이펙트 설정
+	private void setLight() {
+		pushLight[0] = new JLabel();
+		pushLight[0].setLocation(12,0);
+		pushLight[0].setSize(50,469);
+		add(pushLight[0],1);
+		
+		pushLight[1] = new JLabel();
+		pushLight[1].setLocation(62,0);
+		pushLight[1].setSize(50,469);
+		add(pushLight[1],1);
+		
+		pushLight[2] = new JLabel();
+		pushLight[2].setLocation(112,0);
+		pushLight[2].setSize(50,469);
+		add(pushLight[2],1);
+	}
+	
+	//점수 설정
+	private void setScore() {
+		//점수 초기화
+		scoreEffect.setIcon(null);
+		scoreEffect.setSize(105,39);
+		scoreEffect.setLocation(35,300);
+		add(scoreEffect,1);
+		
+		scoreLabel[0] = new JLabel(zeroScoreImage);
+		scoreLabel[0].setSize(17,24);
+		scoreLabel[0].setLocation(230,170);
+		add(scoreLabel[0],1);
+		
+		scoreLabel[1] = new JLabel(zeroScoreImage);
+		scoreLabel[1].setSize(17,24);
+		scoreLabel[1].setLocation(250,170);
+		add(scoreLabel[1],1);
+		
+		scoreLabel[2] = new JLabel(zeroScoreImage);
+		scoreLabel[2].setSize(17,24);
+		scoreLabel[2].setLocation(270,170);
+		add(scoreLabel[2],1);
+		
+		scoreLabel[3] = new JLabel(zeroScoreImage);
+		scoreLabel[3].setSize(17,24);
+		scoreLabel[3].setLocation(290,170);
+		add(scoreLabel[3],1);
+		
+		scoreLabel[4] = new JLabel(zeroScoreImage);
+		scoreLabel[4].setSize(17,24);
+		scoreLabel[4].setLocation(310,170);
+		add(scoreLabel[4],1);
+		
+		scoreLabel[5] = new JLabel(zeroScoreImage);
+		scoreLabel[5].setSize(17,24);
+		scoreLabel[5].setLocation(330,170);
+		add(scoreLabel[5],1);
+	}
+	//콤보 설정
+	private void setCombo() {
+		comboLabel.setSize(90,28);
+		comboLabel.setLocation(45,200);
+		add(comboLabel,0);
+		for(int i = 0 ; i < 3 ; i++) {
+			comboNumLabel[i] = new JLabel(zeroComboImage);
+			comboNumLabel[i].setSize(21,25);
+		}
+		
+		comboNumLabel[0].setLocation(55,230);
+		comboNumLabel[1].setLocation(77,230);
+		comboNumLabel[2].setLocation(99,230);
+		
+		for(int i = 0 ; i < 3 ; i++) {
+			add(comboNumLabel[i],1);
+		}
+	}
+	
+	//음악 선택
+	private void selectMusic() {
+		switch(musicID) {
+		case 0: music = new SadLoveOfMoon(); gameTitleImage = new ImageIcon("Image//00music.png"); break;
+		case 1: music = new FlightOfTheBumblebee(); gameTitleImage = new ImageIcon("Image//01music.png"); break;
+		case 2: music = new Canon(); gameTitleImage = new ImageIcon("Image//02music.png"); break;
+		case 3: music = new TheNutcrackerMarch(); gameTitleImage = new ImageIcon("Image//03music.png"); break;
+		default: break;
+		}
+		targetTime = 60/music.bpm*1000;
+		music.playMusic();
+		startTime = System.nanoTime();
+	}
+	
+	//노트 설정
+	private void noteSetting() {
+		
+		noteOneLabel = new JLabel[music.noteOne.size()];
+		tempOneLabel = new int[music.noteOne.size()][3];
+		for(int i = 0 ; i < music.noteOne.size() ; i++) {
+			noteOneLabel[i] = new JLabel(longBar);
+			tempOneLabel[i] = music.noteOne.get(i);
+			noteOneLabel[i].setSize(barW, barH*tempOneLabel[i][2]);
+		}
+		
+		noteTwoLabel = new JLabel[music.noteTwo.size()];
+		tempTwoLabel = new int[music.noteTwo.size()][3];
+		for(int i = 0 ; i < music.noteTwo.size() ; i++) {
+			noteTwoLabel[i] = new JLabel(longBar);
+			tempTwoLabel[i] = music.noteTwo.get(i);
+			noteTwoLabel[i].setSize(barW, barH*tempTwoLabel[i][2]);
+		}		
+		
+		noteThreeLabel = new JLabel[music.noteThree.size()];
+		tempThreeLabel = new int[music.noteThree.size()][3];
+		for(int i = 0 ; i < music.noteThree.size() ; i++) {
+			noteThreeLabel[i] = new JLabel(longBar);
+			tempThreeLabel[i] = music.noteThree.get(i);
+			noteThreeLabel[i].setSize(barW, barH*tempThreeLabel[i][2]);
+		}	
+	
+	}
+	
+	//노트 추가
+	private void noteAdd() {
+		if(addOneCount != music.noteOne.size()) {
+			if(tempOneLabel[addOneCount][3]<=(int)(currentTime/targetTime*100)) {
+				if(tempOneLabel[addOneCount][2] ==1) {
+					noteOneLabel[addOneCount].setLocation(oneX,tempOneLabel[addOneCount][1]);
+				}else {
+					noteOneLabel[addOneCount].setLocation(oneX,-(10*(tempOneLabel[addOneCount][2]-1)));
+				}				
+				add(noteOneLabel[addOneCount],1);
+				if(addOneCount == barOneCount || addOneCount == 0) {
+					nowOneBar = noteOneLabel[addOneCount];
+					
+				}
+				addOneCount++;
+			}
+		}
+		if(addTwoCount != music.noteTwo.size()) {
+			if(tempTwoLabel[addTwoCount][3]<=(int)(currentTime/targetTime*100)) {
+				if(tempTwoLabel[addTwoCount][2] ==1) {
+					noteTwoLabel[addTwoCount].setLocation(twoX,tempTwoLabel[addTwoCount][1]);
+				}else {
+					noteTwoLabel[addTwoCount].setLocation(twoX,-(10*(tempTwoLabel[addTwoCount][2]-1)));
+				}
+				add(noteTwoLabel[addTwoCount],1);
+				if(addTwoCount == barTwoCount || addTwoCount == 0) {
+					nowTwoBar = noteTwoLabel[addTwoCount];
+					
+				}
+				addTwoCount++;
+			}
+		}
+		if(addThreeCount != music.noteThree.size()) {
+			if(tempThreeLabel[addThreeCount][3]<=(int)(currentTime/targetTime*100)) {
+				if(tempThreeLabel[addThreeCount][2] ==1) {
+					noteThreeLabel[addThreeCount].setLocation(threeX,tempThreeLabel[addThreeCount][1]);
+				}else {
+					noteThreeLabel[addThreeCount].setLocation(threeX,-(10*(tempThreeLabel[addThreeCount][2]-1)));
+				}
+				add(noteThreeLabel[addThreeCount],1);
+				if(addThreeCount == barThreeCount || addThreeCount == 0) {
+					nowThreeBar = noteThreeLabel[addThreeCount];
+				}
+				addThreeCount++;
+			}
+		}	
+		
+
+	}
+	
+	//노트 떨굼
+	private void  noteMove() {
+		
+		for(int i = 0 ; i < music.noteOne.size() ; i++) {
+			noteOneLabel[i].setLocation(noteOneLabel[i].getX(), noteOneLabel[i].getY()+1);
+		}
+		
+		for(int i = 0 ; i < music.noteTwo.size() ; i++) {
+			noteTwoLabel[i].setLocation(noteTwoLabel[i].getX(), noteTwoLabel[i].getY()+1);
+		}
+		
+		for(int i = 0 ; i < music.noteThree.size() ; i++) {
+			noteThreeLabel[i].setLocation(noteThreeLabel[i].getX(), noteThreeLabel[i].getY()+1);
+		}
+	}
+	
+	//입력 모드 설정
+	private void checkMode() {
+		if(nowOneBar !=null) {
+			if(nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  >=lineY-badLine) {
+				oneMode = true;
+			}
+		}
+		if(nowTwoBar !=null) {
+			if(nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  >=lineY-badLine) {
+				twoMode = true;
+			}
+		}
+		if(nowThreeBar !=null) {
+			if(nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  >=lineY-badLine) {
+				threeMode = true;
+			}
+		}
+	}
+	
+	//터치 안한 노트 체크
+	private void noTouchCheck() {
+		if(nowOneBar !=null) {
+			if(nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  >= lineY+badLine) {
+				if(tempOneLabel[barOneCount][2] == 1) {
+					oneMode = false;
+					remove(nowOneBar);
+					barOneCount++;
+					nowOneBar = null;
+					if(barOneCount < addOneCount) {
+						nowOneBar = noteOneLabel[barOneCount];
+					}			
+					scoreEffect.setIcon(missImage);
+					health -= failHealth;
+					minusHealth(failHealth);
+					checkCombo(); combo = 0; changeCombo();
+				}else if(tempOneLabel[barOneCount][2] > 1) {
+					oneMode = false;
+					tempLongBar[0] = nowOneBar;
+					barOneCount++;
+					nowOneBar = null;
+					if(barOneCount < addOneCount) {
+						nowOneBar = noteOneLabel[barOneCount];
+					}
+					scoreEffect.setIcon(missImage);
+					health -= failHealth;
+					minusHealth(failHealth);
+					checkCombo(); combo = 0; changeCombo();
+				}
+				
+			}
+		}
+		if(nowTwoBar !=null) {
+			if(nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  >= lineY+badLine ) {
+				if(tempTwoLabel[barTwoCount][2] == 1) {
+					twoMode = false;
+					remove(nowTwoBar);
+					barTwoCount++;
+					nowTwoBar = null;
+					if(barTwoCount < addTwoCount) {
+						nowTwoBar = noteTwoLabel[barTwoCount];
+					}				
+					scoreEffect.setIcon(missImage);
+					health -= failHealth;
+					minusHealth(failHealth);
+					checkCombo(); combo = 0; changeCombo();
+				}else if(tempTwoLabel[barTwoCount][2] > 1) {
+					twoMode = false;
+					tempLongBar[1] = nowTwoBar;
+					barTwoCount++;
+					nowTwoBar = null;
+					if(barTwoCount < addTwoCount) {
+						nowTwoBar = noteTwoLabel[barTwoCount];
+					}				
+					scoreEffect.setIcon(missImage);
+					health -= failHealth;
+					minusHealth(failHealth);
+					checkCombo(); combo = 0; changeCombo();
+				}
+				
+			}
+		}
+		if(nowThreeBar != null) {
+			if(nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  >= lineY+badLine) {
+				if(tempThreeLabel[barThreeCount][2] == 1) {
+					threeMode = false;
+					remove(nowThreeBar);
+					barThreeCount++;
+					nowThreeBar = null;
+					if(barThreeCount < addThreeCount) {
+						nowThreeBar = noteThreeLabel[barThreeCount];
+					}					
+					scoreEffect.setIcon(missImage);
+					health -= failHealth;
+					minusHealth(failHealth);
+					checkCombo(); combo = 0; changeCombo();
+				}else if(tempThreeLabel[barThreeCount][2] > 1) {
+					threeMode = false;
+					tempLongBar[2] = nowThreeBar;
+					barThreeCount++;
+					nowThreeBar = null;
+					if(barThreeCount < addThreeCount) {
+						nowThreeBar = noteThreeLabel[barThreeCount];
+					}					
+					scoreEffect.setIcon(missImage);
+					health -= failHealth;
+					minusHealth(failHealth);
+					checkCombo(); combo = 0; changeCombo();
+				}
+
+			}
+		}
+
+
+	}
+	
+	//긴 노트 체크
+	private void longNoteCheck() {
+		//본인
+		if(longOneCheck) {
+			if(longOneCount >= music.delay*barH) {
+				score+=(perfect*((combo/50)+1));
+				scoreEffect.setIcon(perfectImage);
+				combo ++; 
+				changeCombo();
+				longOneCount = 0;
+			}
+			
+		}
+		if(tempLongBar[0] != null && tempLongBar[0].getY() >= lineY +goodLine) {
+			longOneCheck = false;
+		}
+		if(longTwoCheck) {
+			if(longTwoCount >= music.delay*barH) {
+				score+=(perfect*((combo/50)+1));
+				scoreEffect.setIcon(perfectImage);
+				combo ++; changeCombo();
+				longTwoCount = 0;
+			}
+			
+		}
+		if(tempLongBar[1] != null && tempLongBar[1].getY() >= lineY +goodLine) {
+			longTwoCheck = false;
+		}
+		if(longThreeCheck) {
+			if(longThreeCount >= music.delay*barH) {
+				score+=(perfect*((combo/50)+1));
+				scoreEffect.setIcon(perfectImage);
+				combo ++; 
+				changeCombo();
+				longThreeCount = 0;
+			}
+			
+		}
+		if(tempLongBar[2] != null && tempLongBar[2].getY() >= lineY +goodLine) {
+			longThreeCheck = false;
+		}
+		
+		//멀티
+	}
+	
+	//점수 최신화
+	private void checkScore() {
+		int temp = score;
+		int temp2 = score;
+		for(int i = 0 ; i < 6 ; i++) {
+			temp2 = temp%10;
+			temp = temp/10;
+			switch(temp2) {
+			case 9: scoreLabel[5-i].setIcon(nineScoreImage);break;
+			case 8: scoreLabel[5-i].setIcon(eightScoreImage);break;
+			case 7: scoreLabel[5-i].setIcon(sevenScoreImage);break;
+			case 6: scoreLabel[5-i].setIcon(sixScoreImage);break;
+			case 5: scoreLabel[5-i].setIcon(fiveScoreImage);break;
+			case 4: scoreLabel[5-i].setIcon(fourScoreImage);break;
+			case 3: scoreLabel[5-i].setIcon(threeScoreImage);break;
+			case 2: scoreLabel[5-i].setIcon(twoScoreImage);break;
+			case 1: scoreLabel[5-i].setIcon(oneScoreImage);break;
+			case 0: scoreLabel[5-i].setIcon(zeroScoreImage);break;
+			default: break;
+			}
+		}
+	}
+	private void checkHealth() {
+		if(health <= 0) {
+			music.stopMusic();
+			timeCount = music.fulltime + 1;
+			
+		}
+	}
+	
+	private void minusHealth(int value) {
+		healthLabel.setSize(healthLabel.getWidth(), healthLabel.getHeight()-value);
+		healthLabel.setLocation(healthLabel.getX(), healthLabel.getY()+value);
+		revalidate();
+		repaint();
+	}
+	
+	private void checkCombo() {
+		if(combo >= maxCombo) {
+			maxCombo = combo;
+		}
+	}
+	
+	private void changeCombo() {
+		int temp = combo;
+		int temp2 = combo;
+		for(int i = 0 ; i < 3 ; i++) {
+			temp2 = temp%10;
+			temp = temp/10;
+			switch(temp2) {
+			case 9: comboNumLabel[2-i].setIcon(nineComboImage);break;
+			case 8: comboNumLabel[2-i].setIcon(eightComboImage);break;
+			case 7: comboNumLabel[2-i].setIcon(sevenComboImage);break;
+			case 6: comboNumLabel[2-i].setIcon(sixComboImage);break;
+			case 5: comboNumLabel[2-i].setIcon(fiveComboImage);break;
+			case 4: comboNumLabel[2-i].setIcon(fourComboImage);break;
+			case 3: comboNumLabel[2-i].setIcon(threeComboImage);break;
+			case 2: comboNumLabel[2-i].setIcon(twoComboImage);break;
+			case 1: comboNumLabel[2-i].setIcon(oneComboImage);break;
+			case 0: comboNumLabel[2-i].setIcon(zeroComboImage);break;
+			default: break;
+			}
+		}
+	}
+
+	class DropBeat extends Thread{
+		
+		public void run() {
+			//멀티 모드 서버 연결
+			try {
+
+				socket = new Socket("localhost", 9999);
+				System.out.println("성공");
+				
+				out = new PrintWriter(socket.getOutputStream());
+				in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				
+				
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			selectMusic();
+			noteSetting();
+			
+			//음악이 끝날 때 까지 실행
+			while(timeCount<music.fulltime) {
+				currentTime = ((System.nanoTime()-startTime)/1000000) - delayTime;
+				
+				out.println("game");
+				out.flush();
+				//일시정지
+				if(pauseCheck == 1) {
+					synchronized (this) {
+						try {
+							
+							tempTiem = (System.nanoTime()-startTime)/1000000;
+							wait();							
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+				
+				if(nowOneBar == null) {
+					oneMode = false;
+				}
+				if(nowTwoBar == null) {
+					twoMode = false;
+				}
+				if(nowThreeBar == null) {
+					threeMode = false;
+				}
+				
+				//실시간으로 노트 생성
+				noteAdd();		
+				
+				//일정 시간마다 동작 수행
+				if((System.nanoTime()-startTime)/1000000>=timeCount) {
+					noteMove();
+					timeCount+=music.delay;
+					longOneCount +=music.delay;
+					longTwoCount +=music.delay;
+					longThreeCount +=music.delay;
+					checkMode();
+					noTouchCheck();			
+					longNoteCheck();
+					checkScore();
+					checkHealth();
+				}
+				
+				revalidate();
+				repaint();
+				
+			}
+			new ScoreWindow(userID,musicID,score,maxCombo);
+			gw.dispose();
+			System.out.println("END");
+			try {
+				server.close();
+				socket.close();
+				in.close();
+				out.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}			
+			this.interrupt();
+			
+		}
+	}	
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+				
+	}
+	@Override
+	public void keyPressed(KeyEvent e) {
+		switch(e.getKeyCode()) {
+		case KeyEvent.VK_A:
+			
+			
+			//버튼 이펙트 효과
+			OneButton.setIcon(pushAButtonImage);
+			pushLight[0].setIcon(pushLightImage);
+			//입력 점수 변환
+			if(oneMode == true) {
+				if(nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2) >= lineY-badLine && nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2) < lineY-goodLine) {
+					score+=(bad*((combo/50)+1));scoreEffect.setIcon(badImage);health -= badHealth; minusHealth(badHealth); checkCombo(); combo = 0; changeCombo();
+					out.println("FB");
+					out.flush();
+				}else if(nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  >= lineY-goodLine && nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  < lineY-greatLine) {
+					score+=(good*((combo/50)+1));scoreEffect.setIcon(goodImage); combo ++; changeCombo();
+					out.println("FO");
+					out.flush();
+				}else if(nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  >= lineY-greatLine && nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  < lineY-perfectLine) {
+					score+=(great*((combo/50)+1));scoreEffect.setIcon(greatImage);combo ++; changeCombo();
+					out.println("FG");
+					out.flush();
+				}else if(nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  >= lineY-perfectLine && nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  < lineY+perfectLine) {
+					score+=(perfect*((combo/50)+1));scoreEffect.setIcon(perfectImage);combo ++; changeCombo();
+					out.println("FP");
+					out.flush();
+				}else if(nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  >= lineY+perfectLine && nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  < lineY+greatLine) {
+					score+=(great*((combo/50)+1));scoreEffect.setIcon(greatImage);combo ++; changeCombo();
+				}else if(nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  >= lineY+greatLine && nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  < lineY+goodLine) {
+					score+=(good*((combo/50)+1));scoreEffect.setIcon(goodImage);combo ++; changeCombo();
+				}else if(nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  >= lineY+goodLine && nowOneBar.getY() + (barH*tempOneLabel[barOneCount][2]) - (barH/2)  < lineY+badLine) {
+					score+=(bad*((combo/50)+1));scoreEffect.setIcon(badImage);health -= badHealth; minusHealth(badHealth); checkCombo(); combo = 0; changeCombo();
+				}
+				if(tempOneLabel[barOneCount][2] == 1) {
+					oneMode = false;
+					remove(nowOneBar);
+					barOneCount++;
+					nowOneBar = null;
+					if(barOneCount < addOneCount) {
+						nowOneBar = noteOneLabel[barOneCount];
+					}		
+				}
+				else if(tempOneLabel[barOneCount][2] > 1) {
+					longOneCheck = true;
+					oneMode = false;
+					tempLongBar[0] = nowOneBar;
+					barOneCount++;
+					nowOneBar = null;
+					if(barOneCount < addOneCount) {
+						nowOneBar = noteOneLabel[barOneCount];
+					}
+				}	
+			}break;
+		case KeyEvent.VK_D:
+			//버튼 이펙트
+			TwoButton.setIcon(pushBButtonImage);
+			pushLight[1].setIcon(pushLightImage);
+			//입력 점수
+			if(twoMode == true) {
+				if(nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2) >= lineY-badLine && nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2) < lineY-goodLine) {
+					score+=(bad*((combo/50)+1));scoreEffect.setIcon(badImage);health -= badHealth;minusHealth(badHealth); checkCombo(); combo = 0; changeCombo();
+				}else if(nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  >= lineY-goodLine && nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  < lineY-greatLine) {
+					score+=(good*((combo/50)+1));scoreEffect.setIcon(goodImage); combo ++; changeCombo();
+				}else if(nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  >= lineY-greatLine && nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  < lineY-perfectLine) {
+					score+=(great*((combo/50)+1));scoreEffect.setIcon(greatImage); combo ++; changeCombo();
+				}else if(nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  >= lineY-perfectLine && nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  < lineY+perfectLine) {
+					score+=(perfect*((combo/50)+1));scoreEffect.setIcon(perfectImage); combo ++; changeCombo();
+				}else if(nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  >= lineY+perfectLine && nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2) - (barH/2)  < lineY+greatLine) {
+					score+=(great*((combo/50)+1));scoreEffect.setIcon(greatImage); combo ++; changeCombo();
+				}else if(nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  >= lineY+greatLine && nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  < lineY+goodLine) {
+					score+=(good*((combo/50)+1));scoreEffect.setIcon(goodImage); combo ++; changeCombo();
+				}else if(nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  >= lineY+goodLine && nowTwoBar.getY() + (barH*tempTwoLabel[barTwoCount][2]) - (barH/2)  < lineY+badLine) {
+					score+=(bad*((combo/50)+1));scoreEffect.setIcon(badImage);health -=badHealth;minusHealth(badHealth); checkCombo(); combo = 0; changeCombo();
+				}
+				if(tempTwoLabel[barTwoCount][2] == 1) {
+					twoMode = false;
+					remove(nowTwoBar);
+					barTwoCount++;
+					nowTwoBar = null;
+					if(barTwoCount < addTwoCount) {
+						nowTwoBar = noteTwoLabel[barTwoCount];
+					}
+				}
+				else if(tempTwoLabel[barTwoCount][2] > 1) {
+					longTwoCheck = true;
+					twoMode = false;
+					tempLongBar[1] = nowTwoBar;
+					barTwoCount++;
+					nowTwoBar = null;
+					if(barTwoCount < addTwoCount) {
+						nowTwoBar = noteTwoLabel[barTwoCount];
+					}
+				}		
+			}break;
+		case KeyEvent.VK_K:
+			//버튼 이펙트
+			ThreeButton.setIcon(pushCButtonImage);
+			pushLight[2].setIcon(pushLightImage);
+			//입력 점수 변환
+			if(threeMode == true) {
+				if(nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2) >= lineY-badLine && nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2) < lineY-goodLine) {
+					score+=(bad*((combo/50)+1));scoreEffect.setIcon(badImage);health -= badHealth; minusHealth(badHealth); checkCombo(); combo = 0; changeCombo();
+				}else if(nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  >= lineY-goodLine && nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  < lineY-greatLine) {
+					score+=(good*((combo/50)+1));scoreEffect.setIcon(goodImage); combo ++; changeCombo();
+				}else if(nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  >= lineY-greatLine && nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  < lineY-perfectLine) {
+					score+=(great*((combo/50)+1));scoreEffect.setIcon(greatImage); combo ++; changeCombo();
+				}else if(nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  >= lineY-perfectLine && nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  < lineY+perfectLine) {
+					score+=(perfect*((combo/50)+1));scoreEffect.setIcon(perfectImage); combo ++; changeCombo();
+				}else if(nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  >= lineY+perfectLine && nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  < lineY+greatLine) {
+					score+=(great*((combo/50)+1));scoreEffect.setIcon(greatImage); combo ++; changeCombo();
+				}else if(nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  >= lineY+greatLine && nowThreeBar.getY() + (barH*tempThreeLabel[barThreeCount][2]) - (barH/2)  < lineY+goodLine) {
+					score+=(good*((combo/50)+1));scoreEffect.setIcon(goodImage); combo ++; changeCombo();
+				}else if(nowThreeBar.getY() + (barH*music.note[barThreeCount][2]) - (barH/2)  >= lineY+goodLine && nowThreeBar.getY() + (barH*music.note[barThreeCount][2]) - (barH/2)  < lineY+badLine) {
+					score+=(bad*((combo/50)+1));scoreEffect.setIcon(badImage);health -=badHealth; minusHealth(badHealth); checkCombo(); combo = 0; changeCombo();
+				}
+				if(tempThreeLabel[barThreeCount][2] == 1) {
+					threeMode = false;
+					remove(nowThreeBar);
+					barThreeCount++;
+					nowThreeBar = null;
+					if(barThreeCount < addThreeCount) {
+						nowThreeBar = noteThreeLabel[barThreeCount];
+					}
+				}
+				else if(tempThreeLabel[barThreeCount][2] > 1) {
+					longThreeCheck = true;
+					threeMode = false;
+					tempLongBar[2] = nowThreeBar;
+					barThreeCount++;
+					nowThreeBar = null;
+					if(barThreeCount < addThreeCount) {
+						nowThreeBar = noteThreeLabel[barThreeCount];
+					}
+				}					
+			}break;
+		}
+		
+	}
+	@Override
+	public void keyReleased(KeyEvent e) {
+		//키 땟을 때 설정(긴 노트)
+		switch(e.getKeyCode()) {
+		case KeyEvent.VK_A: 
+			//버튼 이펙트
+			OneButton.setIcon(nomalAButtonImage);
+			pushLight[0].setIcon(null);
+		
+			longOneCheck = false; 
+			if(tempLongBar[0]!=null) {
+				if(tempLongBar[0].getY()+5 < lineY -goodLine) {
+					score+=(bad*((combo/50)+1));scoreEffect.setIcon(badImage);health -= badHealth; minusHealth(badHealth); remove(tempLongBar[0]); checkCombo(); combo = 0; changeCombo();
+					tempLongBar[0]= null;
+				}else if(tempLongBar[0].getY() >= lineY - goodLine && tempLongBar[0].getY() < lineY-greatLine) {
+					score+=(good*((combo/50)+1));scoreEffect.setIcon(goodImage);remove(tempLongBar[0]); combo ++; changeCombo();
+					tempLongBar[0]= null;
+				}else if(tempLongBar[0].getY() >= lineY - greatLine && tempLongBar[0].getY() < lineY-perfectLine) {
+					score+=(great*((combo/50)+1));scoreEffect.setIcon(greatImage);remove(tempLongBar[0]); combo ++; changeCombo();
+					tempLongBar[0]= null;
+				}else if(tempLongBar[0].getY() >= lineY - perfectLine) {
+					score+=(perfect*((combo/50)+1));scoreEffect.setIcon(perfectImage);remove(tempLongBar[0]); combo ++; changeCombo();
+					tempLongBar[0]= null;
+				}break;
+			}
+			
+		case KeyEvent.VK_D: 
+			//버튼 이펙트
+			TwoButton.setIcon(nomalBButtonImage);
+			pushLight[1].setIcon(null);
+		
+			longTwoCheck = false; 
+			if(tempLongBar[1]!=null) {
+				if(tempLongBar[1].getY()+5 < lineY -goodLine) {
+					score+=(bad*((combo/50)+1));scoreEffect.setIcon(badImage);health -= badHealth; minusHealth(badHealth); remove(tempLongBar[1]); checkCombo(); combo = 0; changeCombo();
+					tempLongBar[1]= null;
+				}else if(tempLongBar[1].getY() >= lineY - goodLine && tempLongBar[1].getY() < lineY-greatLine) {
+					score+=(good*((combo/50)+1));scoreEffect.setIcon(goodImage);remove(tempLongBar[1]); combo ++; changeCombo();
+					tempLongBar[1]= null;
+				}else if(tempLongBar[1].getY() >= lineY - greatLine && tempLongBar[1].getY() < lineY-perfectLine) {
+					score+=(great*((combo/50)+1));scoreEffect.setIcon(greatImage);remove(tempLongBar[1]); combo ++; changeCombo();
+					tempLongBar[1]= null;
+				}else if(tempLongBar[1].getY() >= lineY - perfectLine) {
+					score+=(perfect*((combo/50)+1));scoreEffect.setIcon(perfectImage);remove(tempLongBar[1]); combo ++; changeCombo();
+					tempLongBar[1]= null;
+				}break;
+			}
+		case KeyEvent.VK_K: 
+			
+			ThreeButton.setIcon(nomalCButtonImage);
+			pushLight[2].setIcon(null);
+			
+			longThreeCheck = false; 
+			if(tempLongBar[2]!=null) {
+				if(tempLongBar[2].getY()+5 < lineY - goodLine) {
+					score+=(bad*((combo/50)+1));scoreEffect.setIcon(badImage);health -= badHealth; minusHealth(badHealth); remove(tempLongBar[2]); checkCombo(); combo = 0; changeCombo();
+					tempLongBar[2]= null;
+				}else if(tempLongBar[2].getY() >= lineY - goodLine && tempLongBar[2].getY() < lineY-greatLine) {
+					score+=(good*((combo/50)+1));scoreEffect.setIcon(goodImage);remove(tempLongBar[2]); combo ++; changeCombo();
+					tempLongBar[2]= null;
+				}else if(tempLongBar[2].getY() >= lineY - greatLine && tempLongBar[2].getY() < lineY-perfectLine) {
+					score+=(great*((combo/50)+1));scoreEffect.setIcon(greatImage);remove(tempLongBar[2]); combo ++; changeCombo();
+					tempLongBar[2]= null;
+				}else if(tempLongBar[2].getY() >= lineY - perfectLine) {
+					score+=(perfect*((combo/50)+1));scoreEffect.setIcon(perfectImage);remove(tempLongBar[2]); combo ++; changeCombo();
+					tempLongBar[2]= null;
+				}break;
+			}
+		default:  break;
+		}
+		
+	}
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if(e.getSource() == pauseButton) {
+			add(pausePanel,0);
+			pauseCheck = 1;
+			music.pauseMusic();
+			remove(pauseButton);
+			revalidate();
+			repaint();
+		}
+		if(e.getSource() == pauseResume ) {
+			remove(pausePanel);
+			revalidate();
+			repaint();
+			synchronized (db) {
+				delayTime = delayTime + ((System.nanoTime()-startTime)/1000000) - tempTiem;
+				pauseCheck = 2;
+				db.notify();
+				this.requestFocus();
+			}
+			music.restartMusic();
+		}
+		if(e.getSource() == pauseExit) {
+			new MusicSelect(userID);
+			dispose();
+		}
+	}
+
+		
+	}
+public static void main(String[] args) {
+	new MultiGameWindow2("test",1);
+}
+}
+
+

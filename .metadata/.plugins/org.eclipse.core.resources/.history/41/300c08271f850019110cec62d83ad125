@@ -1,0 +1,478 @@
+package inhatc;
+
+import java.awt.Color;import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Label;
+import java.awt.Panel;
+import java.awt.TextField;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
+public class MusicSelect extends JFrame implements ActionListener {
+
+	private JButton btnReturn;
+	private JButton btnChoice;
+	private JButton btnLeft;
+	private JButton btnRight;
+	private JLabel MusicSelect;
+
+
+	private JLabel HighScore;
+	private JLabel HighScore1;
+	private JLabel HighScore2;
+	private JLabel HighScore3;
+	private JLabel HighScore4;
+	private JLabel HighScore5;
+	private JLabel HighScore6;
+	private int CurrnentIndex;
+	
+	String[] array;
+	String[] array_HighScores;
+	
+	String userID;
+	
+	//데이터베이스 연동 관련 변수
+	Connection conn = null;
+	PreparedStatement pstmt;
+	ResultSet rs;
+	
+	//모드 선택 관련 변수
+	JButton serverBtn = new JButton(new ImageIcon("image/serverBtn.png"));
+	JButton clientBtn = new JButton(new ImageIcon("image/clientBtn.png"));
+	JTextArea ipInput = new JTextArea("localhost");
+	JTextArea portInput = new JTextArea();
+	JLabel ipLabel = new JLabel(new ImageIcon("image/ipLabel.png"));
+	JLabel portLabel = new JLabel(new ImageIcon("image/portLabel.png"));
+	String ip;
+	int port;
+	
+	ArrayList<String> arrayList_HighScore;
+	ArrayList<String> arrayList;
+
+	ArrayList<String> arrayList_Score;
+	public MusicSelect(String userID) {
+		super("Czerny");
+		setLayout(null);
+		arrayList=new ArrayList<>();
+		CurrnentIndex = 0;
+		
+		
+		//데이터베이스 연동
+		loadData();
+		this.userID = userID;
+		
+		
+		arrayList_Score=new ArrayList<>();
+		String[] arrayScore = new String[10];
+		arrayScore[0] = "Image2/점수-0.png";
+		arrayScore[1] = "Image2/점수-1.png";
+		arrayScore[2] = "Image2/점수-2.png";
+		arrayScore[3] = "Image2/점수-3.png";
+		arrayScore[4] = "Image2/점수-4.png";
+		arrayScore[5] = "Image2/점수-5.png";
+		arrayScore[6] = "Image2/점수-6.png";
+		arrayScore[7] = "Image2/점수-7.png";
+		arrayScore[8] = "Image2/점수-8.png";
+		arrayScore[9] = "Image2/점수-9.png";
+		
+		for (String temp : arrayScore) {
+			arrayList_Score.add(temp);
+		}
+		
+		HighScore = new JLabel(new ImageIcon("Image2/최고점수.png"));
+		HighScore1 = new JLabel(new ImageIcon(arrayList_Score.get( Integer.parseInt( array_HighScores[0].substring(0,1)))));
+		HighScore2 = new JLabel(new ImageIcon(arrayList_Score.get( Integer.parseInt( array_HighScores[0].substring(1,2)))));
+		HighScore3 = new JLabel(new ImageIcon(arrayList_Score.get( Integer.parseInt( array_HighScores[0].substring(2,3)))));
+		HighScore4 = new JLabel(new ImageIcon(arrayList_Score.get( Integer.parseInt( array_HighScores[0].substring(3,4)))));
+		HighScore5 = new JLabel(new ImageIcon(arrayList_Score.get( Integer.parseInt( array_HighScores[0].substring(4,5)))));
+		HighScore6 = new JLabel(new ImageIcon(arrayList_Score.get( Integer.parseInt( array_HighScores[0].substring(5,6)))));
+
+
+		HighScore.setBounds(102, 273, 151, 56);
+		
+		HighScore1.setBounds(115, 293, 18, 27);
+		HighScore2.setBounds(137, 293, 18, 27);
+		HighScore3.setBounds(159, 293, 18, 27);
+		HighScore4.setBounds(181, 293, 18, 27);
+		HighScore5.setBounds(203, 293, 18, 27);
+		HighScore6.setBounds(225, 293, 18, 27);
+
+		
+		
+
+		add(HighScore);
+		add(HighScore1);
+		add(HighScore2);
+		add(HighScore3);
+		add(HighScore4);
+		add(HighScore5);
+		add(HighScore6);
+		
+		
+		
+		MusicSelect = new JLabel(new ImageIcon(arrayList.get(0)));
+
+		MusicSelect.setBounds(60, 140, 223, 123);
+
+		add(MusicSelect);
+
+		btnReturn = new JButton(new ImageIcon("Image2/버튼-quit.png")); // 돌아가기 버튼 이미지
+		btnChoice = new JButton(new ImageIcon("Image2/버튼-play.png")); // 선택 버튼 이미지
+		btnLeft = new JButton(new ImageIcon("Image2/버튼-이전.png")); // 왼쪽 버튼 이미지
+		btnRight = new JButton(new ImageIcon("Image2/버튼-다음.png")); // 오른쪽 버튼 이미지
+
+		
+		btnReturn.setBorderPainted(false);
+		btnReturn.setFocusPainted(false);
+		btnReturn.setContentAreaFilled(false);
+		btnReturn.setMargin(new Insets(0,0,0,0));
+        
+        
+		btnChoice.setBorderPainted(false);
+		btnChoice.setFocusPainted(false);
+		btnChoice.setContentAreaFilled(false);
+		btnChoice.setMargin(new Insets(0,0,0,0));
+        
+        
+		btnLeft.setBorderPainted(false);
+		btnLeft.setFocusPainted(false);
+		btnLeft.setContentAreaFilled(false);
+		btnLeft.setMargin(new Insets(0,0,0,0));
+        
+        
+		btnRight.setBorderPainted(false);
+		btnRight.setFocusPainted(false);
+		btnRight.setContentAreaFilled(false);
+		btnRight.setMargin(new Insets(0,0,0,0));
+		
+		serverBtn.setBorderPainted(false);
+		serverBtn.setFocusPainted(false);
+		serverBtn.setContentAreaFilled(false);
+		serverBtn.setMargin(new Insets(0,0,0,0));
+		
+		clientBtn.setBorderPainted(false);
+		clientBtn.setFocusPainted(false);
+		clientBtn.setContentAreaFilled(false);
+		clientBtn.setMargin(new Insets(0,0,0,0));
+		
+		
+		
+		
+		
+		btnLeft.setBounds(10, 153, 19, 31);// 왼쪽버튼 위치
+		btnRight.setBounds(320, 153, 19, 31);// 오른족버튼 위치
+		btnChoice.setBounds(105, 360, 72, 92); // 선택버튼 위치
+		btnReturn.setBounds(25, 355, 72, 79); // 돌아가기 버튼 위치
+		serverBtn.setBounds(185, 360, 72, 92);
+		clientBtn.setBounds(265, 360, 72, 92);
+		ipInput.setBounds(220, 70, 100, 20);
+		portInput.setBounds(220, 100, 100, 20);
+		ipLabel.setBounds(1850, 70, 52, 19);
+		portLabel.setBounds(160, 100, 52, 19);
+
+		btnLeft.addActionListener(this);
+		btnRight.addActionListener(this);
+		btnChoice.addActionListener(this);
+		btnReturn.addActionListener(this);
+		serverBtn.addActionListener(this);
+		clientBtn.addActionListener(this);
+
+		add(btnReturn);
+		add(btnChoice);
+		add(btnLeft);
+		add(btnRight);
+		add(serverBtn);
+		add(clientBtn);
+		add(ipInput);
+		add(portInput);
+		add(ipLabel);
+		add(portLabel);
+
+        class ImagePanel extends JComponent {
+      	    private Image image;
+      	    public ImagePanel(Image image) {
+      	        this.image = image;
+      	    }
+      	    @Override
+      	    protected void paintComponent(Graphics g) {
+      	        super.paintComponent(g);
+      	        g.drawImage(image, 0, 0, this);
+      	    }
+      	}
+		
+		BufferedImage myImage;
+		try {
+			myImage = ImageIO.read(new File("Image2/곡선택 배경.png"));
+			ImagePanel Background = new ImagePanel(myImage);
+			Background.setBounds(0, 0, 350, 500);
+			add(Background);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(365, 535);
+		setResizable(false); // 게임 해상도 고정
+		setLocationRelativeTo(null);
+		setVisible(true);
+
+	}
+
+
+	private void loadData() {
+		conn = DatabaseConnect.getMyDataBase();
+		int temp = 0;
+		int tempCount = 1;
+		int nCount = 0;
+		String tSt = "";
+		try {
+			//음악 개수 불러오기
+		int musicCount = 0;
+		String sql3 = "SELECT count(*) FROM musicscore";
+		pstmt = conn.prepareStatement(sql3);
+		rs = pstmt.executeQuery(sql3);
+		if(rs.next()) {
+			musicCount = rs.getInt(1);
+		}		
+		array = new String[musicCount];
+		 //데이터 베이스로부터  곡 제목 이미지 경로를 받을 배열
+		// 테스트를 위해 임의로 크기는 3으로 지정해놨습니다
+		array[0] = "Image2/00music.png"; //임시로 임력한 값 3개입니다
+		array[1] = "Image2/01music.png";
+		array[2] = "Image2/02music.png";
+		array[3] = "Image2/03music.png";
+		
+		array_HighScores = new String[musicCount]; ///데이터 베이스로부터 곡별 최고 점수 받을 배열
+		// 테스트를 위해 임의로 크기는 3으로 지정해놨습니다
+		arrayList_HighScore=new ArrayList<>();
+		
+		for(int i = 0 ; i < musicCount ; i++) {
+			String sql = "SELECT * FROM musicscore WHERE musicID =" + i;
+			pstmt = conn.prepareStatement(sql);
+			rs = pstmt.executeQuery(sql);
+			if(rs.next()) {
+					temp = rs.getInt("musichighscore");
+					for(int j = 0 ; j < 6 ; j++) {
+						if(temp / tempCount == 0) {
+							break;
+						}
+						tempCount *= 10;
+						nCount ++;
+					}
+					tSt = String.valueOf(temp);
+					for(int k = 0; k < 6-nCount ; k++) {
+						tSt = "0" + tSt;
+					}
+					array_HighScores[i] = tSt;
+				}
+			temp = 0;
+			tempCount = 1;
+			nCount = 0;
+			}
+		} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+		}finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+
+		
+		for (String n : array) {
+			arrayList.add(n);
+		}
+		for (String n : array_HighScores) {
+			arrayList_HighScore.add(n);
+		}
+
+
+
+
+
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		Object source = e.getSource(); // 발생한 이벤트 정보 받아오기
+
+		if (source == btnReturn) {
+			System.exit(0);
+		}
+
+		else if (source == btnChoice) {
+			// 모드 선택 화면 띄움
+			new GameWindow(userID,CurrnentIndex);
+			dispose();
+		}
+		else if(source == serverBtn) {
+			port = Integer.valueOf(portInput.getText());
+			new MultiGameWindow(userID,CurrnentIndex,port);
+			dispose();
+		}
+		else if(source == clientBtn) {
+			ip = ipInput.getText();
+			port = Integer.valueOf(portInput.getText());
+			new MultiGameWindowC(userID,CurrnentIndex,ip,port);
+			dispose();
+		}
+
+		else if (source == btnRight) {
+
+			if (CurrnentIndex + 1 < arrayList.size()) {
+				CurrnentIndex++;
+			} else {
+				CurrnentIndex = 0;
+			}
+			String path = arrayList.get(CurrnentIndex);
+			String HighScore = arrayList_HighScore.get(CurrnentIndex);
+			MusicSelect.setIcon(null);
+			HighScore1.setIcon(null);
+			HighScore2.setIcon(null);
+			HighScore3.setIcon(null);
+			HighScore4.setIcon(null);
+			HighScore5.setIcon(null);
+			HighScore6.setIcon(null);
+			try {
+				BufferedImage img = ImageIO.read(new File(path));
+				MusicSelect.setIcon(new ImageIcon(img));
+				MusicSelect.revalidate();
+				MusicSelect.repaint();
+				MusicSelect.update(MusicSelect.getGraphics());
+				
+				BufferedImage score1 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(0, 1)))));
+				HighScore1.setIcon(new ImageIcon(score1));
+				HighScore1.revalidate();
+				HighScore1.repaint();
+				HighScore1.update(HighScore1.getGraphics());
+				
+				BufferedImage score2 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(1, 2)))));
+				HighScore2.setIcon(new ImageIcon(score2));
+				HighScore2.revalidate();
+				HighScore2.repaint();
+				HighScore2.update(HighScore2.getGraphics());
+				
+				BufferedImage score3 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(2, 3)))));
+				HighScore3.setIcon(new ImageIcon(score3));
+				HighScore3.revalidate();
+				HighScore3.repaint();
+				HighScore3.update(HighScore3.getGraphics());
+				
+				BufferedImage score4 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(3, 4)))));
+				HighScore4.setIcon(new ImageIcon(score4));
+				HighScore4.revalidate();
+				HighScore4.repaint();
+				HighScore4.update(HighScore4.getGraphics());
+				
+				BufferedImage score5 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(4, 5)))));
+				HighScore5.setIcon(new ImageIcon(score5));
+				HighScore5.revalidate();
+				HighScore5.repaint();
+				HighScore5.update(HighScore5.getGraphics());
+				
+				BufferedImage score6 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(5, 6)))));
+				HighScore6.setIcon(new ImageIcon(score6));
+				HighScore6.revalidate();
+				HighScore6.repaint();
+				HighScore6.update(HighScore6.getGraphics());
+				
+			} catch (IOException ex) {
+
+			}
+
+		}
+
+		else if (source == btnLeft) {
+			
+			if (CurrnentIndex - 1 >= 0) {
+				CurrnentIndex--;
+			} else {
+				CurrnentIndex = arrayList.size() - 1;
+			}
+			String path = arrayList.get(CurrnentIndex);
+			String HighScore = arrayList_HighScore.get(CurrnentIndex);
+			MusicSelect.setIcon(null);
+			HighScore1.setIcon(null);
+			HighScore2.setIcon(null);
+			HighScore3.setIcon(null);
+			HighScore4.setIcon(null);
+			HighScore5.setIcon(null);
+			HighScore6.setIcon(null);
+			try {
+				BufferedImage img = ImageIO.read(new File(path));
+				MusicSelect.setIcon(new ImageIcon(img));
+				MusicSelect.revalidate();
+				MusicSelect.repaint();
+				MusicSelect.update(MusicSelect.getGraphics());
+				
+				BufferedImage score1 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(0, 1)))));
+				HighScore1.setIcon(new ImageIcon(score1));
+				HighScore1.revalidate();
+				HighScore1.repaint();
+				HighScore1.update(HighScore1.getGraphics());
+				
+				BufferedImage score2 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(1, 2)))));
+				HighScore2.setIcon(new ImageIcon(score2));
+				HighScore2.revalidate();
+				HighScore2.repaint();
+				HighScore2.update(HighScore2.getGraphics());
+				
+				BufferedImage score3 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(2, 3)))));
+				HighScore3.setIcon(new ImageIcon(score3));
+				HighScore3.revalidate();
+				HighScore3.repaint();
+				HighScore3.update(HighScore3.getGraphics());
+				
+				BufferedImage score4 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(3, 4)))));
+				HighScore4.setIcon(new ImageIcon(score4));
+				HighScore4.revalidate();
+				HighScore4.repaint();
+				HighScore4.update(HighScore4.getGraphics());
+				
+				BufferedImage score5 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(4, 5)))));
+				HighScore5.setIcon(new ImageIcon(score5));
+				HighScore5.revalidate();
+				HighScore5.repaint();
+				HighScore5.update(HighScore5.getGraphics());
+				
+				BufferedImage score6 = ImageIO.read(new File(arrayList_Score.get(Integer.parseInt(HighScore.substring(5, 6)))));
+				HighScore6.setIcon(new ImageIcon(score6));
+				HighScore6.revalidate();
+				HighScore6.repaint();
+				HighScore6.update(HighScore6.getGraphics());
+				
+				
+			} catch (IOException ex) {
+				System.out.println(ex);
+			}
+
+		}
+
+	}
+
+
+}

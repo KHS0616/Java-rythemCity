@@ -1,0 +1,25 @@
+package inhatc;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public  class DatabaseConnect{
+	public static Connection getMyDataBase() {
+		String userID = "gamer";
+		String password = "game1428";
+		Connection connection = null;
+		try {
+   
+			Class.forName("com.mysql.cj.jdbc.Driver"); 
+	 
+            String jdbcUrl = String.format("jdbc:mysql://35.239.246.224:3306/userscore");
+            connection = DriverManager.getConnection(jdbcUrl, userID, password);
+		} catch (ClassNotFoundException e) {	
+			System.out.println("드라이버 에러");
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("DB연결에러");
+		}
+		return connection;
+	}
+}

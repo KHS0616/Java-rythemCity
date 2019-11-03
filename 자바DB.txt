@@ -1,0 +1,21 @@
+
+
+oracle.jdbc.driver.OracleDriver
+jdbc:oracle:thin:@localhost:1521:xe
+"jdbc:mysql://35.239.246.224:3306/test" 
+
+
+
+
+유저 테이블 유저아이디 비밀번호 닉네임
+유저점수 테이블 유저아이디 곡아이디 최고스코어
+곡점수 테이블 곡아이디 최고스코어
+
+USE userscore;
+create table musicscore (musicID INT(2), musicName VARCHAR(255), musicHighScore INT(10), PRIMARY KEY(musicID))
+create table usermusicscore (userID VARCHAR(255), musicID INT(2),  userHighScore INT(10), PRIMARY KEY(userID,musicID))
+
+insert into musicscore values (0,'월애',0)
+insert into musicscore values (1,'왕벌의 비행',0)
+insert into musicscore values (2,'캐논 변주곡',0)
+insert into musicscore values (3,'호두까기인형중 행진곡',0)
